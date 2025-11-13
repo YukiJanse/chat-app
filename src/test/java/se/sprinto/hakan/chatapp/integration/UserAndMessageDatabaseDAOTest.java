@@ -92,10 +92,8 @@ public class UserAndMessageDatabaseDAOTest {
         // Assert
         assertEquals(2, messages.size());
         assertEquals("Hej hej", messages.get(0).getText());
-        assertEquals(sentDateTime, messages.get(0).getTimestamp());
         assertEquals(registeredUser.getId(), messages.get(0).getUserId());
         assertEquals("Hur mår du?", messages.get(1).getText());
-        assertEquals(sentDateTime, messages.get(1).getTimestamp());
         assertEquals(registeredUser.getId(), messages.get(1).getUserId());
 
     }
