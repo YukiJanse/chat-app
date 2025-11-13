@@ -13,7 +13,7 @@ import java.util.List;
 
 public class MessageDatabaseDAO implements MessageDAO {
     private static final Logger logger = LoggerFactory.getLogger(MessageDatabaseDAO.class);
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
 
     public MessageDatabaseDAO() {
@@ -31,7 +31,7 @@ public class MessageDatabaseDAO implements MessageDAO {
     @Override
     public void saveMessage(Message message) {
         String sql = """
-                INSERT INTO message (text, user_id, timestamp) VALUES (?, ?, ?)
+                INSERT INTO messages (text, user_id, timestamp) VALUES (?, ?, ?)
                 """;
         try (Connection con = dataSource.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -55,7 +55,7 @@ public class MessageDatabaseDAO implements MessageDAO {
         List<Message> messages = new ArrayList<>();
         String sql = """
                 SELECT m.message_id, m.text, m.timestamp, m.user_id
-                FROM message m JOIN user u ON m.user_id = u.user_id
+                FROM messages m JOIN users u ON m.user_id = u.user_id
                 WHERE m.user_id = ?
                 """;
         try (Connection con = dataSource.getConnection();

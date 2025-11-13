@@ -3,5 +3,7 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/src/main/java/se/sprinto/hakan/chatapp/dao/MessageDatabaseDAO.java" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/src/main/java/se/sprinto/hakan/chatapp/dao/UserDatabaseDAO.java" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/src/test/java/se/sprinto/hakan/chatapp/dao/UserDatabaseDAOTest.java" dialect="H2" />
+    <file url="file://$PROJECT_DIR$/src/test/java/se/sprinto/hakan/chatapp/integration/UserAndMessageDatabaseDAOTest.java" dialect="H2" />
   </component>
 </project>

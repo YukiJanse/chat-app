@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class UserDatabaseDAO implements UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDatabaseDAO.class);
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
     public UserDatabaseDAO() {
         dataSource = DatabaseUtil.getInstance().getDataSource();
@@ -34,8 +34,8 @@ public class UserDatabaseDAO implements UserDAO {
         User authorizedUser = null;
         String sql = """
                 SELECT u.user_id, u.username, u.password, m.message_id, m.text, m.timestamp
-                FROM user u
-                LEFT JOIN message m ON u.user_id = m.user_id
+                FROM users u
+                LEFT JOIN messages m ON u.user_id = m.user_id
                 WHERE u.username = ? AND u.password = ?
                 """;
         try (Connection con = dataSource.getConnection();
@@ -66,15 +66,17 @@ public class UserDatabaseDAO implements UserDAO {
 
     @Override
     public User register(User user) {
+        if (user == null || user.getUsername() == null || user.getPassword() == null) {
+            throw new IllegalArgumentException("Username and password must exist");
+        }
         User registeredUser = null;
         String insertSql = """
-                INSERT INTO user (user_id, username, password) VALUES(?, ?, ?)
+                INSERT INTO users (username, password) VALUES(?, ?)
                 """;
         try (Connection con = dataSource.getConnection();
              PreparedStatement preparedStmtForInsert = con.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            preparedStmtForInsert.setInt(1, user.getId());
-            preparedStmtForInsert.setString(2, user.getUsername());
-            preparedStmtForInsert.setString(3, user.getPassword());
+            preparedStmtForInsert.setString(1, user.getUsername());
+            preparedStmtForInsert.setString(2, user.getPassword());
             int insertedRows = preparedStmtForInsert.executeUpdate();
             if (insertedRows == 0) {
                 logger.warn("No user inserted with username= {}", user.getUsername());
@@ -99,7 +101,7 @@ public class UserDatabaseDAO implements UserDAO {
 
     private User findRegisteredUser(Connection con, int id) throws SQLException {
         User registeredUser = null;
-        String selectSql = "SELECT * FROM user WHERE user_id = ?";
+        String selectSql = "SELECT * FROM users WHERE user_id = ?";
         try (PreparedStatement preparedStmtForSelect = con.prepareStatement(selectSql)) {
             preparedStmtForSelect.setInt(1, id);
             try (ResultSet rs =  preparedStmtForSelect.executeQuery()) {
