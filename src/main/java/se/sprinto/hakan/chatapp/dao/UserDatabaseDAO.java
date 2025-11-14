@@ -13,6 +13,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
+/**
+ * The UserDatabaseDAO class is an implementation of the UserDAO interface. It interacts with
+ * a relational database to perform operations such as inserting a new user to the database and
+ * finding a user by user id. It has a Data source to access the database. It has two constructors
+ *  * for the product and testing version.
+ */
 public class UserDatabaseDAO implements UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDatabaseDAO.class);
     private final DataSource dataSource;
@@ -23,12 +29,18 @@ public class UserDatabaseDAO implements UserDAO {
 
     /**
      * Constructor for testing.
-     * @param dataSource is to connect User data base.
+     * @param dataSource is to connect User database.
      */
     public UserDatabaseDAO(DataSource dataSource) {
          this.dataSource = dataSource;
     }
 
+    /**
+     * Authorizes username and password by finding a user that has the same username and password.
+     * @param username The username of the user
+     * @param password The password of the user
+     * @return a User object if it found the user from the database, otherwise returns null.
+     */
     @Override
     public User login(String username, String password) {
         User authorizedUser = null;
@@ -64,15 +76,20 @@ public class UserDatabaseDAO implements UserDAO {
         return authorizedUser;
     }
 
+    /**
+     * Inserts a new user to the database.
+     * @param user The user to register
+     * @return User object with a generated ID if it's successfully inserted, otherwise it
+     * returns null.
+     * @throws IllegalArgumentException will be thrown if The user object is invalid
+     */
     @Override
     public User register(User user) {
         if (user == null || user.getUsername() == null || user.getPassword() == null) {
             throw new IllegalArgumentException("Username and password must exist");
         }
         User registeredUser = null;
-        String insertSql = """
-                INSERT INTO users (username, password) VALUES(?, ?)
-                """;
+        String insertSql = "INSERT INTO users (username, password) VALUES(?, ?)";
         try (Connection con = dataSource.getConnection();
              PreparedStatement preparedStmtForInsert = con.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             preparedStmtForInsert.setString(1, user.getUsername());
@@ -85,7 +102,7 @@ public class UserDatabaseDAO implements UserDAO {
                 try (ResultSet generatedKeys = preparedStmtForInsert.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int generatedId = generatedKeys.getInt(1);
-                        registeredUser = findRegisteredUser(con, generatedId);
+                        registeredUser = findById(con, generatedId);
                     }
                 }
             }
@@ -95,11 +112,24 @@ public class UserDatabaseDAO implements UserDAO {
         return registeredUser;
     }
 
+    /**
+     * Maps the ResultSet object to a User object.
+     * @param rs ResultSet of SQL command.
+     * @return a User object from the ResultSet.
+     * @throws SQLException It throws if something went wrong with JDBC functions.
+     */
     private User mapUser(ResultSet rs) throws SQLException {
         return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("password"));
     }
 
-    private User findRegisteredUser(Connection con, int id) throws SQLException {
+    /**
+     * Finds a user from the database by ID
+     * @param con JDBC connection to access the database
+     * @param id The id of the user
+     * @return a User object matched by the id.
+     * @throws SQLException It throws if something went wrong with JDBC functions.
+     */
+    private User findById(Connection con, int id) throws SQLException {
         User registeredUser = null;
         String selectSql = "SELECT * FROM users WHERE user_id = ?";
         try (PreparedStatement preparedStmtForSelect = con.prepareStatement(selectSql)) {

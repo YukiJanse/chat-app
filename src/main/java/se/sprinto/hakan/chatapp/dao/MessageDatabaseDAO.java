@@ -11,6 +11,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The MessageDatabaseDAO class is an implementation of the MessageDAO interface. It interacts with
+ * a relational database to perform operations such as inserting a new message to the database and
+ * finding messages by user id. It has a Data source to access the database. It has two constructors
+ * for the product and testing version.
+ */
 public class MessageDatabaseDAO implements MessageDAO {
     private static final Logger logger = LoggerFactory.getLogger(MessageDatabaseDAO.class);
     private final DataSource dataSource;
@@ -22,14 +28,22 @@ public class MessageDatabaseDAO implements MessageDAO {
 
     /**
      * Constructor for testing
-     * @param dataSource is to conect database
+     * @param dataSource The DataSource to access the database
      */
     public MessageDatabaseDAO(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    /**
+     * Inserts a message to the database.
+     * @param message The message to insert to the database.
+     * @throws IllegalArgumentException will be thrown if Message is null.
+     */
     @Override
     public void saveMessage(Message message) {
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null.");
+        }
         String sql = """
                 INSERT INTO messages (text, user_id, timestamp) VALUES (?, ?, ?)
                 """;
@@ -50,6 +64,11 @@ public class MessageDatabaseDAO implements MessageDAO {
         }
     }
 
+    /**
+     * Finds messages from the database by user id.
+     * @param userId The user id that messages have.
+     * @return a list of messages that matched with the ID.
+     */
     @Override
     public List<Message> getMessagesByUserId(int userId) {
         List<Message> messages = new ArrayList<>();
@@ -73,6 +92,12 @@ public class MessageDatabaseDAO implements MessageDAO {
         return messages;
     }
 
+    /**
+     * Maps a Message object from ResultSet.
+     * @param rs The ResultSet of a SQL command
+     * @return A Message object from the ResultSet.
+     * @throws SQLException will be thrown if something went wrong with JDBC functions.
+     */
     private Message mapMessage(ResultSet rs) throws SQLException {
         //int messageId = rs.getInt("message_id"); There is no interface for messageId in Message class
         String text = rs.getString("text");
