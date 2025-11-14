@@ -41,7 +41,7 @@ public class MessageDatabaseDAO implements MessageDAO {
      */
     @Override
     public void saveMessage(Message message) {
-        if (message == null) {
+        if (message == null || message.getText() == null || message.getTimestamp() == null) {
             throw new IllegalArgumentException("Message cannot be null.");
         }
         String sql = """

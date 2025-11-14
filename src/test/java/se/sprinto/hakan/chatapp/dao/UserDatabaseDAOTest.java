@@ -1,5 +1,6 @@
 package se.sprinto.hakan.chatapp.dao;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 import se.sprinto.hakan.chatapp.model.User;
 import se.sprinto.hakan.chatapp.util.DatabaseUtil;
@@ -59,6 +60,11 @@ class UserDatabaseDAOTest {
             stmt.execute("ALTER TABLE messages ALTER COLUMN message_id RESTART WITH 1");
             stmt.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
         }
+    }
+
+    @AfterAll
+    static void closeDataSource() {
+        ((HikariDataSource)testDataSource).close();
     }
 
     @Test
