@@ -3,5 +3,7 @@
   <component name="DataSourcePerFileMappings">
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/20837dd2-4f4b-43e3-9e2a-87d424a0ff69/console.sql" value="20837dd2-4f4b-43e3-9e2a-87d424a0ff69" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/20837dd2-4f4b-43e3-9e2a-87d424a0ff69/console_1.sql" value="20837dd2-4f4b-43e3-9e2a-87d424a0ff69" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/79819a24-d5fa-47b9-b4f2-1f9544bae856/console.sql" value="79819a24-d5fa-47b9-b4f2-1f9544bae856" />
+    <file url="file://$PROJECT_DIR$/src/test/java/se/sprinto/hakan/chatapp/dao/UserDatabaseDAOTest.java" value="79819a24-d5fa-47b9-b4f2-1f9544bae856" />
   </component>
 </project>
