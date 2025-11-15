@@ -1,4 +1,4 @@
-name: tests.yml
+name: Java tests CI
 
 on:
   push:
@@ -20,10 +20,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Check Maven packeges
+      - name: Check Maven packages
         uses: actions/cache@v3
         with:
-          path: -/.m2
+          path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
