@@ -1,11 +1,12 @@
 package se.sprinto.hakan.chatapp.integration;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 import se.sprinto.hakan.chatapp.dao.MessageDatabaseDAO;
 import se.sprinto.hakan.chatapp.dao.UserDatabaseDAO;
 import se.sprinto.hakan.chatapp.model.Message;
 import se.sprinto.hakan.chatapp.model.User;
-import se.sprinto.hakan.chatapp.util.DatabaseUtil;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -13,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +25,13 @@ public class UserAndMessageDatabaseDAOTest {
 
     @BeforeAll
     static void setUpDatabase() throws SQLException {
-        testDataSource = DatabaseUtil.getInstance("test").getDataSource();
+        HikariConfig config = new HikariConfig();
+        String dbUrl = "jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1";
+        config.setJdbcUrl(dbUrl);
+        config.setUsername("sa");
+        config.setPassword("");
+
+        testDataSource = new HikariDataSource(config);
 
         try (Connection con = testDataSource.getConnection();
              Statement stmt = con.createStatement()) {
@@ -63,6 +71,11 @@ public class UserAndMessageDatabaseDAOTest {
             stmt.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
 
         }
+    }
+
+    @AfterAll
+    static void closeDataSource() {
+        ((HikariDataSource)testDataSource).close();
     }
 
     @Test
