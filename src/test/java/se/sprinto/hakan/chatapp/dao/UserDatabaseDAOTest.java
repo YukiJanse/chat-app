@@ -3,6 +3,7 @@ package se.sprinto.hakan.chatapp.dao;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
+import org.mindrot.jbcrypt.BCrypt;
 import se.sprinto.hakan.chatapp.model.User;
 
 import javax.sql.DataSource;
@@ -33,7 +34,7 @@ class UserDatabaseDAOTest {
             CREATE TABLE users (
                 user_id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) NOT NULL,
-                password VARCHAR(50) NOT NULL)
+                password VARCHAR(255) NOT NULL)
             """);
 
             stmt.execute("""
@@ -52,8 +53,9 @@ class UserDatabaseDAOTest {
         userDatabaseDAO = new UserDatabaseDAO(testDataSource);
         try(Connection con = testDataSource.getConnection();
         Statement stmt = con.createStatement()) {
-            stmt.execute("INSERT INTO users (username, password) VALUES ('Yuki', 'pass')");
-            stmt.execute("INSERT INTO users (username, password) VALUES ('Emil', 'pass')");
+            String hashedPass = BCrypt.hashpw("pass", BCrypt.gensalt());
+            stmt.execute("INSERT INTO users (username, password) VALUES ('Yuki', '" + hashedPass + "')");
+            stmt.execute("INSERT INTO users (username, password) VALUES ('Emil', '" + hashedPass + "')");
         }
     }
 
@@ -87,7 +89,7 @@ class UserDatabaseDAOTest {
         assertNotNull(authorizedUser);
         assertNotEquals(0, authorizedUser.getId());
         assertEquals("Yuki", authorizedUser.getUsername());
-        assertEquals("pass", authorizedUser.getPassword());
+        assertTrue(BCrypt.checkpw("pass", authorizedUser.getPassword()));
     }
 
     @Test
@@ -128,7 +130,7 @@ class UserDatabaseDAOTest {
         // Assert
         assertNotNull(registeredUser);
         assertEquals("Karin", registeredUser.getUsername());
-        assertEquals("pass", registeredUser.getPassword());
+        assertTrue(BCrypt.checkpw("pass", registeredUser.getPassword()));
         assertNotEquals(0, registeredUser.getId());
     }
 

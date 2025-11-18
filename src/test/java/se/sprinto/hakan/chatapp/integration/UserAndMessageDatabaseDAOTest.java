@@ -3,6 +3,7 @@ package se.sprinto.hakan.chatapp.integration;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
+import org.mindrot.jbcrypt.BCrypt;
 import se.sprinto.hakan.chatapp.dao.MessageDatabaseDAO;
 import se.sprinto.hakan.chatapp.dao.UserDatabaseDAO;
 import se.sprinto.hakan.chatapp.model.Message;
@@ -39,7 +40,7 @@ public class UserAndMessageDatabaseDAOTest {
                 CREATE TABLE users(
                     user_id INT AUTO_INCREMENT PRIMARY KEY,
                     username VARCHAR(50) NOT NULL,
-                    password VARCHAR(50) NOT NULL
+                    password VARCHAR(255) NOT NULL
                 )
             """);
 
@@ -90,7 +91,7 @@ public class UserAndMessageDatabaseDAOTest {
         // Assert
         assertNotNull(registeredUser);
         assertEquals("Yuki", registeredUser.getUsername());
-        assertEquals("pass", registeredUser.getPassword());
+        assertTrue(BCrypt.checkpw("pass", registeredUser.getPassword()));
 
         // Arrange
         LocalDateTime sentDateTime = LocalDateTime.now();

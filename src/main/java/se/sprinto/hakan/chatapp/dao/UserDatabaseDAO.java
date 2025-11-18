@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * The UserDatabaseDAO class is an implementation of the UserDAO interface. It interacts with
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
  */
 public class UserDatabaseDAO implements UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDatabaseDAO.class);
+    private static final int DUPLICATE_ENTRY = 1062;
     private final DataSource dataSource;
 
     public UserDatabaseDAO() {
@@ -48,16 +50,19 @@ public class UserDatabaseDAO implements UserDAO {
                 SELECT u.user_id, u.username, u.password, m.message_id, m.text, m.timestamp
                 FROM users u
                 LEFT JOIN messages m ON u.user_id = m.user_id
-                WHERE u.username = ? AND u.password = ?
+                WHERE u.username = ?
                 """;
         try (Connection con = dataSource.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, username);
-            ps.setString(2, password);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    if (authorizedUser == null) {
-                        authorizedUser = mapUser(rs);
+                    if (authorizedUser == null) { // If it is the first row
+                        authorizedUser = validateUser(rs, password);
+                        if (authorizedUser == null) { // If the password is wrong, authorizedUser will be null
+                            logger.warn("Wrong password.");
+                            break;
+                        }
                     }
                     int message_id = rs.getInt("message_id");
                     if (!rs.wasNull()) {
@@ -93,7 +98,8 @@ public class UserDatabaseDAO implements UserDAO {
         try (Connection con = dataSource.getConnection();
              PreparedStatement preparedStmtForInsert = con.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             preparedStmtForInsert.setString(1, user.getUsername());
-            preparedStmtForInsert.setString(2, user.getPassword());
+            String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+            preparedStmtForInsert.setString(2, hashedPassword);
             int insertedRows = preparedStmtForInsert.executeUpdate();
             if (insertedRows == 0) {
                 logger.warn("No user inserted with username= {}", user.getUsername());
@@ -107,6 +113,9 @@ public class UserDatabaseDAO implements UserDAO {
                 }
             }
         } catch (SQLException e) {
+            if (e.getErrorCode() == DUPLICATE_ENTRY) {
+                logger.error("The username already exists.", e);
+            }
             logger.error("Failed to insert user to database.", e);
         }
         return registeredUser;
@@ -120,6 +129,21 @@ public class UserDatabaseDAO implements UserDAO {
      */
     private User mapUser(ResultSet rs) throws SQLException {
         return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("password"));
+    }
+
+    /**
+     * Validates password and Maps the ResultSet object to a User object.
+     * @param rs ResultSet of SQL command.
+     * @param rawPassword The plain password from user input.
+     * @return a User object from the ResultSet.
+     * @throws SQLException It throws if something went wrong with JDBC functions.
+     */
+    private User validateUser(ResultSet rs, String rawPassword) throws SQLException {
+        int user_id = rs.getInt("user_id");
+        String username = rs.getString("username");
+        String storedHash = rs.getString("password");
+
+        return BCrypt.checkpw(rawPassword, storedHash) ? new User(user_id, username, storedHash) : null;
     }
 
     /**

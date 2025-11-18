@@ -3,6 +3,7 @@ package se.sprinto.hakan.chatapp.dao;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
+import org.mindrot.jbcrypt.BCrypt;
 import se.sprinto.hakan.chatapp.model.Message;
 
 import javax.sql.DataSource;
@@ -34,7 +35,7 @@ class MessageDatabaseDAOTest {
                 CREATE TABLE users (
                 user_id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) NOT NULL,
-                password VARCHAR(50) NOT NULL
+                password VARCHAR(255) NOT NULL
                 )
             """);
 
@@ -55,7 +56,8 @@ class MessageDatabaseDAOTest {
         messageDatabaseDAO = new MessageDatabaseDAO(testDataSource);
         try (Connection con = testDataSource.getConnection();
              Statement stmt = con.createStatement()) {
-            stmt.execute("INSERT INTO users (user_id, username, password) VALUES (1, 'Yuki', 'pass')");
+            String hashedPass = BCrypt.hashpw("pass", BCrypt.gensalt());
+            stmt.execute("INSERT INTO users (user_id, username, password) VALUES (1, 'Yuki', '" + hashedPass + "')");
 
         }
     }
