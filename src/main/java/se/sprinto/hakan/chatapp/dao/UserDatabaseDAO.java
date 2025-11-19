@@ -93,7 +93,6 @@ public class UserDatabaseDAO implements UserDAO {
         if (user == null || user.getUsername() == null || user.getPassword() == null) {
             throw new IllegalArgumentException("Username and password must exist");
         }
-        User registeredUser = null;
         String insertSql = "INSERT INTO users (username, password) VALUES(?, ?)";
         try (Connection con = dataSource.getConnection();
              PreparedStatement preparedStmtForInsert = con.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -103,12 +102,13 @@ public class UserDatabaseDAO implements UserDAO {
             int insertedRows = preparedStmtForInsert.executeUpdate();
             if (insertedRows == 0) {
                 logger.warn("No user inserted with username= {}", user.getUsername());
+                user = null;
             } else {
                 logger.info("Successfully inserted user with username= {}", user.getUsername());
+                user.setPassword(hashedPassword);
                 try (ResultSet generatedKeys = preparedStmtForInsert.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        int generatedId = generatedKeys.getInt(1);
-                        registeredUser = findById(con, generatedId);
+                        user.setId(generatedKeys.getInt(1));
                     }
                 }
             }
@@ -118,17 +118,7 @@ public class UserDatabaseDAO implements UserDAO {
             }
             logger.error("Failed to insert user to database.", e);
         }
-        return registeredUser;
-    }
-
-    /**
-     * Maps the ResultSet object to a User object.
-     * @param rs ResultSet of SQL command.
-     * @return a User object from the ResultSet.
-     * @throws SQLException It throws if something went wrong with JDBC functions.
-     */
-    private User mapUser(ResultSet rs) throws SQLException {
-        return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("password"));
+        return user;
     }
 
     /**
@@ -144,29 +134,5 @@ public class UserDatabaseDAO implements UserDAO {
         String storedHash = rs.getString("password");
 
         return BCrypt.checkpw(rawPassword, storedHash) ? new User(user_id, username, storedHash) : null;
-    }
-
-    /**
-     * Finds a user from the database by ID
-     * @param con JDBC connection to access the database
-     * @param id The id of the user
-     * @return a User object matched by the id.
-     * @throws SQLException It throws if something went wrong with JDBC functions.
-     */
-    private User findById(Connection con, int id) throws SQLException {
-        User registeredUser = null;
-        String selectSql = "SELECT * FROM users WHERE user_id = ?";
-        try (PreparedStatement preparedStmtForSelect = con.prepareStatement(selectSql)) {
-            preparedStmtForSelect.setInt(1, id);
-            try (ResultSet rs =  preparedStmtForSelect.executeQuery()) {
-                if (rs.next()) {
-                    registeredUser = mapUser(rs);
-                    logger.info("Successfully find registered user");
-                } else {
-                    logger.warn("Failed to find registered user");
-                }
-            }
-        }
-        return registeredUser;
     }
 }
