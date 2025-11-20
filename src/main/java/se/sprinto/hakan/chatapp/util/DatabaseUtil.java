@@ -19,6 +19,7 @@ import javax.sql.DataSource;
  */
 public class DatabaseUtil {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseUtil.class);
+    private static final String PRODUCT_ENVIRONMENT = "product";
     private static DatabaseUtil instance;
     private final Properties properties;
     private DataSource dataSource;
@@ -26,10 +27,12 @@ public class DatabaseUtil {
     /**
      * This allows the application to seamlessly switch between real databases and test databases (such as H2)
      * without modifying the application code.
+     * @param environment
      */
-    private DatabaseUtil() {
+    private DatabaseUtil(String environment) {
         properties = new Properties();
-        try (InputStream input = ClassLoader.getSystemResourceAsStream("application.properties")) {
+        String propertiesFilename = environment.equalsIgnoreCase("test") ? "application-test.properties" : "application.properties";
+        try (InputStream input = ClassLoader.getSystemResourceAsStream(propertiesFilename)) {
             properties.load(input);
             logger.info("Successfully loaded application.properties.");
             // Set a DataSource object
@@ -42,15 +45,23 @@ public class DatabaseUtil {
 
     }
 
-
     /**
-     * Returns the singleton.
-     * @return An instance of this class with the configuration depending on the parameter
+     * Returns the singleton using the production configuration.
+     * @return An instance of this class with the production configuration
      */
     public static DatabaseUtil getInstance() {
+        return getInstance(PRODUCT_ENVIRONMENT);
+    }
+
+    /**
+     * Returns the singleton using either "product" or "test" mode.
+     * @param environment The parameter for the configuration
+     * @return An instance of this class with the configuration depending on the parameter
+     */
+    public static DatabaseUtil getInstance(String environment) {
         if (instance == null) {
-            instance = new DatabaseUtil();
-            logger.info("Successfully created an instance.");
+            instance = new DatabaseUtil(environment);
+            logger.info("Successfully created an instance. Environment: {}", environment);
         }
         return instance;
     }
