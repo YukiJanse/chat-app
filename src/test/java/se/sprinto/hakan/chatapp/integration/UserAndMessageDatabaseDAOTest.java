@@ -1,6 +1,5 @@
 package se.sprinto.hakan.chatapp.integration;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 import org.mindrot.jbcrypt.BCrypt;
@@ -8,6 +7,7 @@ import se.sprinto.hakan.chatapp.dao.MessageDatabaseDAO;
 import se.sprinto.hakan.chatapp.dao.UserDatabaseDAO;
 import se.sprinto.hakan.chatapp.model.Message;
 import se.sprinto.hakan.chatapp.model.User;
+import se.sprinto.hakan.chatapp.util.DatabaseUtil;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,13 +25,7 @@ public class UserAndMessageDatabaseDAOTest {
 
     @BeforeAll
     static void setUpDatabase() throws SQLException {
-        HikariConfig config = new HikariConfig();
-        String dbUrl = "jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1";
-        config.setJdbcUrl(dbUrl);
-        config.setUsername("sa");
-        config.setPassword("");
-
-        testDataSource = new HikariDataSource(config);
+        testDataSource = DatabaseUtil.getInstance("test").getDataSource();
 
         try (Connection con = testDataSource.getConnection();
              Statement stmt = con.createStatement()) {
@@ -75,7 +68,12 @@ public class UserAndMessageDatabaseDAOTest {
     }
 
     @AfterAll
-    static void closeDataSource() {
+    static void closeDataSource() throws SQLException{
+        try (Connection con = testDataSource.getConnection();
+             Statement stmt = con.createStatement()) {
+            stmt.execute("DROP TABLE messages");
+            stmt.execute("DROP TABLE users");
+        }
         ((HikariDataSource)testDataSource).close();
     }
 
