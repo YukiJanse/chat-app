@@ -27,7 +27,7 @@ public class DatabaseUtil {
     /**
      * This allows the application to seamlessly switch between real databases and test databases (such as H2)
      * without modifying the application code.
-     * @param environment
+     * @param environment It is a parameter for test mode and product mode
      */
     private DatabaseUtil(String environment) {
         properties = new Properties();
@@ -62,6 +62,9 @@ public class DatabaseUtil {
         if (instance == null) {
             instance = new DatabaseUtil(environment);
             logger.info("Successfully created an instance. Environment: {}", environment);
+        } else if (environment.equals("test")) {
+            // For testing, but it is not the best way.
+            instance = new DatabaseUtil(environment);
         }
         return instance;
     }
