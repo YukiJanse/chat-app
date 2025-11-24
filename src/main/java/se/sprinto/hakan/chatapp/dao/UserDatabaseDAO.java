@@ -45,6 +45,10 @@ public class UserDatabaseDAO implements UserDAO {
      */
     @Override
     public User login(String username, String password) {
+        if (username == null || password == null) {
+            logger.error("username or password was null");
+            throw new IllegalArgumentException("username and password can't be null");
+        }
         User authorizedUser = null;
         String sql = """
                 SELECT u.user_id, u.username, u.password, m.message_id, m.text, m.timestamp
@@ -91,6 +95,7 @@ public class UserDatabaseDAO implements UserDAO {
     @Override
     public User register(User user) {
         if (user == null || user.getUsername() == null || user.getPassword() == null) {
+            logger.error("user object or the attributes were null");
             throw new IllegalArgumentException("Username and password must exist");
         }
         String insertSql = "INSERT INTO users (username, password) VALUES(?, ?)";

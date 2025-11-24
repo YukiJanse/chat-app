@@ -89,6 +89,7 @@ public class UserAndMessageDatabaseDAOTest {
         // Assert
         assertNotNull(registeredUser);
         assertEquals("Yuki", registeredUser.getUsername());
+        assertEquals(1, registeredUser.getId());
         assertTrue(BCrypt.checkpw("pass", registeredUser.getPassword()));
 
         // Arrange
